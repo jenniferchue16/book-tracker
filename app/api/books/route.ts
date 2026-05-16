@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     openLibraryKey: openLibraryKey || '',
     publishedYear,
     pages: pages || undefined,
-    genres: [],
+    tropes: [],
     description: description || '',
     status: 'want-to-read',
     rating: 0,
