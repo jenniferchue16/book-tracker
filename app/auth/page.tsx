@@ -64,14 +64,14 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/5 via-transparent to-transparent pointer-events-none" />
 
       <div className="relative w-full max-w-xs">
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8 flex flex-col items-center gap-7">
 
           {/* Icon */}
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-            <BookOpen className="w-7 h-7 text-amber-500" />
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+            <BookOpen className="w-7 h-7 text-blue-500" />
           </div>
 
           {/* Heading */}
@@ -105,8 +105,8 @@ export default function AuthPage() {
                   ${error
                     ? 'border-red-500 text-red-500'
                     : d
-                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                    : 'border-border focus:border-amber-500'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-border focus:border-blue-500'
                   }
                 `}
               />

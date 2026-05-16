@@ -37,7 +37,7 @@ export default function BookSearch({ open, onClose, onAdded }: Props) {
       setSearching(true)
       try {
         const res = await fetch(
-          `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10&fields=key,title,author_name,cover_i,first_publish_year`
+          `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10&fields=key,title,author_name,cover_i,first_publish_year,number_of_pages_median`
         )
         const data = await res.json()
         setResults(data.docs || [])
@@ -55,6 +55,19 @@ export default function BookSearch({ open, onClose, onAdded }: Props) {
       const coverUrl = doc.cover_i
         ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
         : ''
+
+      // Fetch description from Open Library Works API (best-effort)
+      let description = ''
+      try {
+        const workRes = await fetch(`https://openlibrary.org${doc.key}.json`)
+        const workData = await workRes.json()
+        if (workData.description) {
+          description = typeof workData.description === 'string'
+            ? workData.description
+            : (workData.description.value ?? '')
+        }
+      } catch { /* description is optional */ }
+
       const res = await fetch('/api/books', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -64,6 +77,8 @@ export default function BookSearch({ open, onClose, onAdded }: Props) {
           coverUrl,
           openLibraryKey: doc.key,
           publishedYear: doc.first_publish_year,
+          pages: doc.number_of_pages_median,
+          description,
         }),
       })
       if (res.status === 409) { toast.info('Already in your library'); return }
@@ -142,6 +157,7 @@ export default function BookSearch({ open, onClose, onAdded }: Props) {
                 <p className="text-xs text-muted-foreground truncate">
                   {doc.author_name?.[0] ?? 'Unknown Author'}
                   {doc.first_publish_year ? ` · ${doc.first_publish_year}` : ''}
+                  {doc.number_of_pages_median ? ` · ${doc.number_of_pages_median} pp` : ''}
                 </p>
               </div>
 
@@ -150,9 +166,9 @@ export default function BookSearch({ open, onClose, onAdded }: Props) {
                 onClick={() => addBook(doc)}
                 disabled={!!adding}
                 className="flex-shrink-0 flex items-center gap-1 text-xs font-medium
-                  text-amber-700 dark:text-amber-300
-                  bg-amber-100 dark:bg-amber-900/40
-                  hover:bg-amber-200 dark:hover:bg-amber-900/70
+                  text-blue-700 dark:text-blue-300
+                  bg-blue-100 dark:bg-blue-900/40
+                  hover:bg-blue-200 dark:hover:bg-blue-900/70
                   px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
               >
                 {adding === doc.key

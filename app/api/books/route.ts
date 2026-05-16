@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { title, author, coverUrl, openLibraryKey, publishedYear } = body
+  const { title, author, coverUrl, openLibraryKey, publishedYear, pages, description } = body
 
   if (!title || !author) {
     return NextResponse.json({ error: 'title and author are required' }, { status: 400 })
@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
     coverUrl: coverUrl || '',
     openLibraryKey: openLibraryKey || '',
     publishedYear,
+    pages: pages || undefined,
+    genres: [],
+    description: description || '',
     status: 'want-to-read',
     rating: 0,
     notes: '',

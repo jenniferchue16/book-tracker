@@ -6,18 +6,20 @@ const STATUS_LABELS: Record<BookStatus, string> = {
   'want-to-read': 'Want to Read',
   reading: 'Reading',
   finished: 'Finished',
+  borrowed: 'Borrowed',
 }
 
 const STATUS_COLORS: Record<BookStatus, string> = {
   'want-to-read': 'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300',
-  reading: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
+  reading: 'bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300',
   finished: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
+  borrowed: 'bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300',
 }
 
 const GRADIENTS = [
   'from-violet-500 to-purple-700',
   'from-rose-500 to-pink-700',
-  'from-amber-500 to-orange-700',
+  'from-blue-500 to-blue-700',
   'from-teal-500 to-emerald-700',
   'from-sky-500 to-blue-700',
   'from-fuchsia-500 to-rose-700',
@@ -38,10 +40,10 @@ export default function BookCard({ book, onClick }: { book: Book; onClick: () =>
   return (
     <button
       onClick={onClick}
-      className="group text-left w-full flex flex-col gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded-xl"
+      className="group text-left w-full flex flex-col gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-xl"
     >
       {/* Cover */}
-      <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-sm dark:shadow-none border border-border/40 group-hover:-translate-y-1 group-hover:shadow-lg dark:group-hover:shadow-amber-900/20 transition-all duration-200 bg-muted">
+      <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-sm dark:shadow-none border border-border/40 group-hover:-translate-y-1 group-hover:shadow-lg dark:group-hover:shadow-blue-900/20 transition-all duration-200 bg-muted">
         {book.coverUrl ? (
           <Image
             src={book.coverUrl}

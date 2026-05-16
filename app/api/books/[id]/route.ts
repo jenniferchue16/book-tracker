@@ -8,7 +8,7 @@ export async function PUT(
 ) {
   const { id } = await params
   const body = await request.json()
-  const { status, rating, notes, dateStarted, dateCompleted } = body
+  const { status, rating, notes, dateStarted, dateCompleted, description, pages, tropes } = body
 
   await connectDB()
 
@@ -18,6 +18,9 @@ export async function PUT(
       ...(status && { status }),
       ...(rating !== undefined && { rating }),
       ...(notes !== undefined && { notes }),
+      ...(description !== undefined && { description }),
+      ...(pages !== undefined && { pages: pages || null }),
+      ...(tropes !== undefined && { tropes }),
       ...(dateStarted !== undefined && { dateStarted: dateStarted ? new Date(dateStarted) : null }),
       ...(dateCompleted !== undefined && { dateCompleted: dateCompleted ? new Date(dateCompleted) : null }),
     },

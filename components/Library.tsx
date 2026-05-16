@@ -29,16 +29,17 @@ type SortDir = 'asc' | 'desc'
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'want-to-read', label: 'Want to Read' },
+  { key: 'borrowed', label: 'Borrowed' },
   { key: 'reading', label: 'Reading' },
   { key: 'finished', label: 'Finished' },
 ]
 
 const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ElementType }[] = [
-  { key: 'title',         label: 'Title',          icon: ArrowDownAZ },
-  { key: 'author',        label: 'Author',          icon: User },
-  { key: 'rating',        label: 'Rating',          icon: Star },
-  { key: 'dateStarted',   label: 'Date started',    icon: Calendar },
-  { key: 'dateCompleted', label: 'Date completed',  icon: Calendar },
+  { key: 'title',         label: 'Title',     icon: ArrowDownAZ },
+  { key: 'author',        label: 'Author',    icon: User },
+  { key: 'rating',        label: 'Rating',    icon: Star },
+  { key: 'dateStarted',   label: 'Started',   icon: Calendar },
+  { key: 'dateCompleted', label: 'Completed', icon: Calendar },
 ]
 
 function sortBooks(books: Book[], sort: SortKey, dir: SortDir): Book[] {
@@ -72,7 +73,6 @@ export default function Library() {
   const [dir, setDir] = useState<SortDir>('asc')
   const [searchOpen, setSearchOpen] = useState(false)
   const [editingBook, setEditingBook] = useState<Book | null>(null)
-
   useEffect(() => {
     fetch('/api/books')
       .then(r => r.json())
@@ -91,6 +91,7 @@ export default function Library() {
     'want-to-read': books.filter(b => b.status === 'want-to-read').length,
     reading: books.filter(b => b.status === 'reading').length,
     finished: books.filter(b => b.status === 'finished').length,
+    borrowed: books.filter(b => b.status === 'borrowed').length,
   }
 
   const visible = useMemo(() => {
@@ -106,6 +107,7 @@ export default function Library() {
 
   const isFiltered = query.trim() !== ''
   const activeSort = SORT_OPTIONS.find(o => o.key === sort)!
+  const activeFilter = FILTERS.find(f => f.key === filter)!
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,8 +115,8 @@ export default function Library() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
-              <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+            <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
+              <BookOpen className="w-3.5 h-3.5 text-blue-500" />
             </div>
             <span className="font-semibold text-foreground text-base tracking-tight">My Library</span>
           </div>
@@ -123,7 +125,7 @@ export default function Library() {
             <Button
               onClick={() => setSearchOpen(true)}
               size="sm"
-              className="bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400 text-white rounded-full px-3 h-8 text-xs gap-1.5 shadow-none"
+              className="bg-blue-500 hover:bg-blue-600 dark:hover:bg-blue-400 text-white rounded-full px-3 h-8 text-xs gap-1.5 shadow-none"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add Book</span>
@@ -171,56 +173,56 @@ export default function Library() {
         </div>
 
         {/* ── FILTER + SORT ──────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-3">
-          {/* Status tabs */}
-          <div className="flex gap-1 overflow-x-auto no-scrollbar">
-            <div className="flex gap-1 bg-muted border border-border rounded-full p-1 w-max">
-              {FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  className={`
-                    whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-medium transition-all
-                    ${filter === f.key
-                      ? 'bg-amber-500 text-white shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                    }
-                  `}
-                >
-                  {f.label}
-                  {counts[f.key] > 0 && (
-                    <span className={`ml-1 text-[10px] ${filter === f.key ? 'text-amber-100' : 'text-muted-foreground'}`}>
-                      {counts[f.key]}
-                    </span>
+        <div className="flex items-center justify-between">
+          {/* Filter dropdown */}
+          <Select value={filter} onValueChange={v => setFilter(v as Filter)}>
+            <SelectTrigger className="w-36 h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 shadow-none focus:ring-0 focus:ring-offset-0">
+              <SelectValue>
+                <span className="flex items-center gap-1.5">
+                  {activeFilter.label}
+                  {counts[filter] > 0 && (
+                    <span className="inline-flex items-center justify-center text-[10px] text-muted-foreground leading-none">{counts[filter]}</span>
                   )}
-                </button>
+                </span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false} sideOffset={6}>
+              {FILTERS.map(f => (
+                <SelectItem key={f.key} value={f.key}>
+                  <span className="flex items-center gap-1.5">
+                    {f.label}
+                    {counts[f.key] > 0 && (
+                      <span className="inline-flex items-center justify-center text-[10px] text-muted-foreground leading-none">{counts[f.key]}</span>
+                    )}
+                  </span>
+                </SelectItem>
               ))}
-            </div>
-          </div>
+            </SelectContent>
+          </Select>
 
           {/* Sort dropdown + direction toggle */}
-          <div className="flex items-center gap-1 shrink-0">
-            <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
-              <SelectTrigger className="h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 w-40 shadow-none focus:ring-0 focus:ring-offset-0">
-                <activeSort.icon className="w-3 h-3 text-muted-foreground shrink-0" />
-                <SelectValue>{activeSort.label}</SelectValue>
-              </SelectTrigger>
-              <SelectContent align="end" alignItemWithTrigger={false} sideOffset={6}>
-                {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>{label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-1">
+          <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
+            <SelectTrigger className="w-36 h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 shadow-none focus:ring-0 focus:ring-offset-0">
+              <activeSort.icon className="w-3 h-3 text-muted-foreground shrink-0" />
+              <SelectValue>{activeSort.label}</SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end" alignItemWithTrigger={false} sideOffset={6}>
+              {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
+                <SelectItem key={key} value={key}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setDir(d => d === 'asc' ? 'desc' : 'asc')}
-              className="h-8 w-8 rounded-full border border-border bg-muted text-muted-foreground hover:text-foreground shadow-none"
+              className="shrink-0 h-8 w-8 rounded-full border border-border bg-muted text-muted-foreground hover:text-foreground shadow-none"
               title={dir === 'asc' ? 'Ascending' : 'Descending'}
             >
               {dir === 'asc'
@@ -242,8 +244,8 @@ export default function Library() {
         {/* Empty state */}
         {!loading && visible.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-              <BookOpen className="w-8 h-8 text-amber-500/60" />
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-blue-500/60" />
             </div>
             <div>
               <p className="font-semibold text-foreground">
@@ -269,7 +271,7 @@ export default function Library() {
             {!isFiltered && filter === 'all' && (
               <Button
                 onClick={() => setSearchOpen(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-white rounded-full text-sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm"
               >
                 <Plus className="w-4 h-4 mr-1.5" />
                 Add your first book

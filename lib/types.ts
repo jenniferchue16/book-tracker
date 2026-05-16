@@ -1,6 +1,6 @@
 import type { Document } from 'mongoose'
 
-export type BookStatus = 'want-to-read' | 'reading' | 'finished'
+export type BookStatus = 'want-to-read' | 'borrowed' | 'reading' | 'finished'
 
 export interface IBook extends Document {
   title: string
@@ -11,6 +11,9 @@ export interface IBook extends Document {
   rating: number
   notes: string
   publishedYear?: number
+  pages?: number
+  tropes?: string[]
+  description?: string
   dateStarted?: Date
   dateCompleted?: Date
   createdAt: Date
@@ -27,6 +30,9 @@ export interface Book {
   rating: number
   notes: string
   publishedYear?: number
+  pages?: number
+  tropes?: string[]
+  description?: string
   dateStarted?: string
   dateCompleted?: string
   createdAt: string
@@ -39,4 +45,5 @@ export interface OpenLibraryDoc {
   author_name?: string[]
   cover_i?: number
   first_publish_year?: number
+  number_of_pages_median?: number
 }

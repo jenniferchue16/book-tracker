@@ -5,12 +5,12 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fdf3e7",
-  "theme_color": "#f59e0b",
+  "background_color": "#eff6ff",
+  "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "/icon",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
