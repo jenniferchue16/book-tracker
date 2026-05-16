@@ -99,7 +99,7 @@ export default function Library() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
@@ -132,7 +132,7 @@ export default function Library() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 safe-bottom">
         {/* Stats */}
         <p className="text-xs text-muted-foreground">
           {counts.all} {counts.all === 1 ? 'book' : 'books'}
