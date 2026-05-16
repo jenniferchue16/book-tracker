@@ -26,6 +26,7 @@ export default function AuthPage() {
       } else {
         setError(true)
         setDigits(['', '', '', '', '', ''])
+        setTimeout(() => setError(false), 500)
         inputs.current[0]?.focus()
         toast.error('Wrong passcode — try again')
       }
@@ -39,12 +40,8 @@ export default function AuthPage() {
     const next = [...digits]
     next[index] = value
     setDigits(next)
-    if (value && index < 5) {
-      inputs.current[index + 1]?.focus()
-    }
-    if (next.every(d => d !== '')) {
-      submit(next.join(''))
-    }
+    if (value && index < 5) inputs.current[index + 1]?.focus()
+    if (next.every(d => d !== '')) submit(next.join(''))
   }
 
   function handleKey(index: number, e: KeyboardEvent<HTMLInputElement>) {
@@ -60,31 +57,33 @@ export default function AuthPage() {
     const next = [...digits]
     pasted.split('').forEach((ch, i) => { next[i] = ch })
     setDigits(next)
-    const focusIdx = Math.min(pasted.length, 5)
-    inputs.current[focusIdx]?.focus()
-    if (next.every(d => d !== '')) {
-      submit(next.join(''))
-    }
+    inputs.current[Math.min(pasted.length, 5)]?.focus()
+    if (next.every(d => d !== '')) submit(next.join(''))
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
-      <div className="w-full max-w-sm mx-4">
-        <div className="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center gap-6">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+
+      <div className="relative w-full max-w-xs">
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-8 flex flex-col items-center gap-7">
+
           {/* Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-amber-600" />
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+            <BookOpen className="w-7 h-7 text-amber-500" />
           </div>
 
           {/* Heading */}
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">My Library</h1>
-            <p className="text-sm text-gray-500 mt-1">Enter your 6-digit passcode</p>
+          <div className="text-center -mt-2">
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">My Library</h1>
+            <p className="text-sm text-muted-foreground mt-1">Enter your 6-digit passcode</p>
           </div>
 
           {/* OTP inputs */}
           <div
-            className={`flex gap-2 transition-transform ${error ? 'animate-[shake_0.4s_ease]' : ''}`}
+            className="flex gap-2"
+            style={{ animation: error ? 'shake 0.45s ease' : 'none' }}
           >
             {digits.map((d, i) => (
               <input
@@ -100,13 +99,14 @@ export default function AuthPage() {
                 onPaste={handlePaste}
                 disabled={loading}
                 className={`
-                  w-11 h-14 text-center text-xl font-semibold rounded-xl border-2 outline-none
-                  transition-all duration-150 bg-gray-50
+                  w-10 h-12 text-center text-lg font-semibold rounded-xl border-2 outline-none
+                  bg-muted transition-all duration-150 text-foreground
+                  disabled:opacity-50
                   ${error
-                    ? 'border-red-400 bg-red-50 text-red-600'
+                    ? 'border-red-500 text-red-500'
                     : d
-                    ? 'border-amber-400 bg-amber-50 text-amber-700'
-                    : 'border-gray-200 text-gray-900 focus:border-amber-400 focus:bg-amber-50'
+                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                    : 'border-border focus:border-amber-500'
                   }
                 `}
               />
@@ -114,20 +114,10 @@ export default function AuthPage() {
           </div>
 
           {loading && (
-            <p className="text-sm text-gray-400">Checking…</p>
+            <p className="text-xs text-muted-foreground -mt-3">Checking…</p>
           )}
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20% { transform: translateX(-8px); }
-          40% { transform: translateX(8px); }
-          60% { transform: translateX(-6px); }
-          80% { transform: translateX(6px); }
-        }
-      `}</style>
     </div>
   )
 }

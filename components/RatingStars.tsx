@@ -24,7 +24,7 @@ export default function RatingStars({ value, onChange, readonly = false, size = 
           className={cn(
             dim,
             'transition-colors',
-            active >= n ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-gray-300',
+            active >= n ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-gray-300 dark:text-gray-600',
             !readonly && 'cursor-pointer hover:text-amber-400'
           )}
           onMouseEnter={() => !readonly && setHovered(n)}
