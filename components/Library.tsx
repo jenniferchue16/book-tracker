@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BookOpen, Plus, LogOut, Loader2,
-  Search, X, ArrowUpDown, Clock, Star, User, ArrowDownAZ,
+  Search, X, Star, User, ArrowDownAZ, Calendar, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,8 @@ import BookEditDialog from './BookEditDialog'
 import type { Book, BookStatus } from '@/lib/types'
 
 type Filter = 'all' | BookStatus
-type SortKey = 'newest' | 'oldest' | 'title' | 'author' | 'rating'
+type SortKey = 'title' | 'author' | 'rating' | 'dateStarted' | 'dateCompleted'
+type SortDir = 'asc' | 'desc'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -33,21 +34,30 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ElementType }[] = [
-  { key: 'newest', label: 'Date added',   icon: Clock },
-  { key: 'oldest', label: 'Oldest first', icon: Clock },
-  { key: 'title',  label: 'Title A–Z',    icon: ArrowDownAZ },
-  { key: 'author', label: 'Author A–Z',   icon: User },
-  { key: 'rating', label: 'Top rated',    icon: Star },
+  { key: 'title',         label: 'Title',          icon: ArrowDownAZ },
+  { key: 'author',        label: 'Author',          icon: User },
+  { key: 'rating',        label: 'Rating',          icon: Star },
+  { key: 'dateStarted',   label: 'Date started',    icon: Calendar },
+  { key: 'dateCompleted', label: 'Date completed',  icon: Calendar },
 ]
 
-function sortBooks(books: Book[], sort: SortKey): Book[] {
+function sortBooks(books: Book[], sort: SortKey, dir: SortDir): Book[] {
+  const mult = dir === 'asc' ? 1 : -1
   return [...books].sort((a, b) => {
     switch (sort) {
-      case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      case 'title':  return a.title.localeCompare(b.title)
-      case 'author': return a.author.localeCompare(b.author)
-      case 'rating': return b.rating - a.rating
+      case 'title':  return mult * a.title.localeCompare(b.title)
+      case 'author': return mult * a.author.localeCompare(b.author)
+      case 'rating': return mult * (a.rating - b.rating)
+      case 'dateStarted': {
+        const at = a.dateStarted ? new Date(a.dateStarted).getTime() : 0
+        const bt = b.dateStarted ? new Date(b.dateStarted).getTime() : 0
+        return mult * (at - bt)
+      }
+      case 'dateCompleted': {
+        const at = a.dateCompleted ? new Date(a.dateCompleted).getTime() : 0
+        const bt = b.dateCompleted ? new Date(b.dateCompleted).getTime() : 0
+        return mult * (at - bt)
+      }
     }
   })
 }
@@ -58,7 +68,8 @@ export default function Library() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<SortKey>('newest')
+  const [sort, setSort] = useState<SortKey>('title')
+  const [dir, setDir] = useState<SortDir>('asc')
   const [searchOpen, setSearchOpen] = useState(false)
   const [editingBook, setEditingBook] = useState<Book | null>(null)
 
@@ -90,8 +101,8 @@ export default function Library() {
         b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
       )
     }
-    return sortBooks(result, sort)
-  }, [books, filter, query, sort])
+    return sortBooks(result, sort, dir)
+  }, [books, filter, query, sort, dir])
 
   const isFiltered = query.trim() !== ''
   const activeSort = SORT_OPTIONS.find(o => o.key === sort)!
@@ -187,23 +198,37 @@ export default function Library() {
             </div>
           </div>
 
-          {/* Sort dropdown */}
-          <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
-            <SelectTrigger className="shrink-0 h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 w-40 shadow-none focus:ring-0 focus:ring-offset-0">
-              <ArrowUpDown className="w-3 h-3 text-muted-foreground shrink-0" />
-              <SelectValue>{activeSort.label}</SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end" alignItemWithTrigger={false} sideOffset={6}>
-              {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
-                <SelectItem key={key} value={key}>
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>{label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Sort dropdown + direction toggle */}
+          <div className="flex items-center gap-1 shrink-0">
+            <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
+              <SelectTrigger className="h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 w-40 shadow-none focus:ring-0 focus:ring-offset-0">
+                <activeSort.icon className="w-3 h-3 text-muted-foreground shrink-0" />
+                <SelectValue>{activeSort.label}</SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end" alignItemWithTrigger={false} sideOffset={6}>
+                {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
+                  <SelectItem key={key} value={key}>
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>{label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDir(d => d === 'asc' ? 'desc' : 'asc')}
+              className="h-8 w-8 rounded-full border border-border bg-muted text-muted-foreground hover:text-foreground shadow-none"
+              title={dir === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              {dir === 'asc'
+                ? <ArrowUp className="w-3 h-3" />
+                : <ArrowDown className="w-3 h-3" />
+              }
+            </Button>
+          </div>
         </div>
 
         {/* Loading */}

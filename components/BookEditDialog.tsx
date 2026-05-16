@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import RatingStars from './RatingStars'
@@ -40,6 +41,8 @@ export default function BookEditDialog({ book, onClose, onSaved, onDeleted }: Pr
   const [status, setStatus] = useState<BookStatus>(book?.status ?? 'want-to-read')
   const [rating, setRating] = useState(book?.rating ?? 0)
   const [notes, setNotes] = useState(book?.notes ?? '')
+  const [dateStarted, setDateStarted] = useState(book?.dateStarted ? book.dateStarted.slice(0, 10) : '')
+  const [dateCompleted, setDateCompleted] = useState(book?.dateCompleted ? book.dateCompleted.slice(0, 10) : '')
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -52,7 +55,7 @@ export default function BookEditDialog({ book, onClose, onSaved, onDeleted }: Pr
       const res = await fetch(`/api/books/${book!._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, rating, notes }),
+        body: JSON.stringify({ status, rating, notes, dateStarted: dateStarted || null, dateCompleted: dateCompleted || null }),
       })
       if (!res.ok) throw new Error()
       const { book: updated } = await res.json()
@@ -135,6 +138,27 @@ export default function BookEditDialog({ book, onClose, onSaved, onDeleted }: Pr
               rows={3}
               className="resize-none"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Date started</Label>
+              <Input
+                type="date"
+                value={dateStarted}
+                onChange={e => setDateStarted(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Date completed</Label>
+              <Input
+                type="date"
+                value={dateCompleted}
+                onChange={e => setDateCompleted(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
           </div>
         </div>
 

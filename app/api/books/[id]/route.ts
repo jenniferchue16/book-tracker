@@ -8,13 +8,19 @@ export async function PUT(
 ) {
   const { id } = await params
   const body = await request.json()
-  const { status, rating, notes } = body
+  const { status, rating, notes, dateStarted, dateCompleted } = body
 
   await connectDB()
 
   const book = await Book.findByIdAndUpdate(
     id,
-    { ...(status && { status }), ...(rating !== undefined && { rating }), ...(notes !== undefined && { notes }) },
+    {
+      ...(status && { status }),
+      ...(rating !== undefined && { rating }),
+      ...(notes !== undefined && { notes }),
+      ...(dateStarted !== undefined && { dateStarted: dateStarted ? new Date(dateStarted) : null }),
+      ...(dateCompleted !== undefined && { dateCompleted: dateCompleted ? new Date(dateCompleted) : null }),
+    },
     { new: true }
   ).lean()
 

@@ -11,6 +11,8 @@ export interface IBook extends Document {
   rating: number
   notes: string
   publishedYear?: number
+  dateStarted?: Date
+  dateCompleted?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -25,6 +27,8 @@ export interface Book {
   rating: number
   notes: string
   publishedYear?: number
+  dateStarted?: string
+  dateCompleted?: string
   createdAt: string
   updatedAt: string
 }

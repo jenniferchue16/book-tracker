@@ -15,8 +15,12 @@ const BookSchema = new Schema<IBook>(
     rating: { type: Number, default: 0, min: 0, max: 5 },
     notes: { type: String, default: '' },
     publishedYear: { type: Number },
+    dateStarted: { type: Date },
+    dateCompleted: { type: Date },
   },
   { timestamps: true }
 )
 
-export default mongoose.models.Book || mongoose.model<IBook>('Book', BookSchema)
+// Delete the cached model so schema changes are always picked up (Next.js module caching retains the old schema otherwise)
+delete mongoose.models['Book']
+export default mongoose.model<IBook>('Book', BookSchema)
