@@ -1,10 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Plus, LogOut, Loader2 } from 'lucide-react'
+import {
+  BookOpen, Plus, LogOut, Loader2,
+  Search, X, ArrowUpDown, Clock, Star, User, ArrowDownAZ,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ThemeToggle } from './ThemeToggle'
 import BookCard from './BookCard'
 import BookSearch from './BookSearch'
@@ -12,6 +23,7 @@ import BookEditDialog from './BookEditDialog'
 import type { Book, BookStatus } from '@/lib/types'
 
 type Filter = 'all' | BookStatus
+type SortKey = 'newest' | 'oldest' | 'title' | 'author' | 'rating'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -20,11 +32,33 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'finished', label: 'Finished' },
 ]
 
+const SORT_OPTIONS: { key: SortKey; label: string; icon: React.ElementType }[] = [
+  { key: 'newest', label: 'Date added',   icon: Clock },
+  { key: 'oldest', label: 'Oldest first', icon: Clock },
+  { key: 'title',  label: 'Title A–Z',    icon: ArrowDownAZ },
+  { key: 'author', label: 'Author A–Z',   icon: User },
+  { key: 'rating', label: 'Top rated',    icon: Star },
+]
+
+function sortBooks(books: Book[], sort: SortKey): Book[] {
+  return [...books].sort((a, b) => {
+    switch (sort) {
+      case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'title':  return a.title.localeCompare(b.title)
+      case 'author': return a.author.localeCompare(b.author)
+      case 'rating': return b.rating - a.rating
+    }
+  })
+}
+
 export default function Library() {
   const router = useRouter()
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<SortKey>('newest')
   const [searchOpen, setSearchOpen] = useState(false)
   const [editingBook, setEditingBook] = useState<Book | null>(null)
 
@@ -48,14 +82,25 @@ export default function Library() {
     finished: books.filter(b => b.status === 'finished').length,
   }
 
-  const visible = filter === 'all' ? books : books.filter(b => b.status === filter)
+  const visible = useMemo(() => {
+    let result = filter === 'all' ? books : books.filter(b => b.status === filter)
+    if (query.trim()) {
+      const q = query.trim().toLowerCase()
+      result = result.filter(
+        b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
+      )
+    }
+    return sortBooks(result, sort)
+  }, [books, filter, query, sort])
+
+  const isFiltered = query.trim() !== ''
+  const activeSort = SORT_OPTIONS.find(o => o.key === sort)!
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
-          {/* Logo */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
               <BookOpen className="w-3.5 h-3.5 text-amber-500" />
@@ -63,12 +108,11 @@ export default function Library() {
             <span className="font-semibold text-foreground text-base tracking-tight">My Library</span>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-1">
             <Button
               onClick={() => setSearchOpen(true)}
               size="sm"
-              className="bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-400 text-white rounded-full px-3 h-8 text-xs gap-1.5 shadow-none"
+              className="bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400 text-white rounded-full px-3 h-8 text-xs gap-1.5 shadow-none"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add Book</span>
@@ -88,18 +132,38 @@ export default function Library() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
         {/* Stats */}
-        <p className="text-xs text-muted-foreground mb-5">
+        <p className="text-xs text-muted-foreground">
           {counts.all} {counts.all === 1 ? 'book' : 'books'}
           {counts.reading > 0 && ` · ${counts.reading} reading`}
           {counts.finished > 0 && ` · ${counts.finished} finished`}
         </p>
 
-        {/* Filter tabs — scrollable on mobile */}
-        <div className="relative mb-7">
-          <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1 -mb-1">
-            <div className="flex gap-1 bg-muted border border-border rounded-full p-1 w-max min-w-0">
+        {/* ── SEARCH ─────────────────────────────────────────── */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search your library by title or author…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="pl-9 pr-9 h-10 text-sm rounded-xl"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* ── FILTER + SORT ──────────────────────────────────── */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Status tabs */}
+          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+            <div className="flex gap-1 bg-muted border border-border rounded-full p-1 w-max">
               {FILTERS.map(f => (
                 <button
                   key={f.key}
@@ -122,6 +186,24 @@ export default function Library() {
               ))}
             </div>
           </div>
+
+          {/* Sort dropdown */}
+          <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
+            <SelectTrigger className="shrink-0 h-8 rounded-full border-border bg-muted text-xs font-medium px-3 gap-1.5 w-40 shadow-none focus:ring-0 focus:ring-offset-0">
+              <ArrowUpDown className="w-3 h-3 text-muted-foreground shrink-0" />
+              <SelectValue>{activeSort.label}</SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end" alignItemWithTrigger={false} sideOffset={6}>
+              {SORT_OPTIONS.map(({ key, label, icon: Icon }) => (
+                <SelectItem key={key} value={key}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Loading */}
@@ -140,13 +222,26 @@ export default function Library() {
             </div>
             <div>
               <p className="font-semibold text-foreground">
-                {filter === 'all' ? 'Your library is empty' : 'No books here yet'}
+                {isFiltered
+                  ? `No results for "${query}"`
+                  : filter !== 'all'
+                  ? 'No books here yet'
+                  : 'Your library is empty'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {filter === 'all' ? 'Search for a book to get started' : 'Try a different filter'}
+                {isFiltered
+                  ? 'Try a different search term'
+                  : filter !== 'all'
+                  ? 'Try a different filter'
+                  : 'Search for a book to get started'}
               </p>
             </div>
-            {filter === 'all' && (
+            {isFiltered && (
+              <Button variant="outline" size="sm" onClick={() => setQuery('')} className="rounded-full">
+                Clear search
+              </Button>
+            )}
+            {!isFiltered && filter === 'all' && (
               <Button
                 onClick={() => setSearchOpen(true)}
                 className="bg-amber-500 hover:bg-amber-600 text-white rounded-full text-sm"
@@ -160,7 +255,7 @@ export default function Library() {
 
         {/* Grid */}
         {!loading && visible.length > 0 && (
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-5">
             {visible.map(book => (
               <BookCard key={book._id} book={book} onClick={() => setEditingBook(book)} />
             ))}

@@ -113,7 +113,7 @@ export default function BookEditDialog({ book, onClose, onSaved, onDeleted }: Pr
               <SelectTrigger>
                 <SelectValue>{STATUS_LABELS[status]}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent alignItemWithTrigger={false} sideOffset={6}>
                 <SelectItem value="want-to-read">Want to Read</SelectItem>
                 <SelectItem value="reading">Currently Reading</SelectItem>
                 <SelectItem value="finished">Finished</SelectItem>
